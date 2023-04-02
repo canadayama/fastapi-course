@@ -1,0 +1,62 @@
+services:
+  app:
+    build: .
+    container_name: mywebapi-container
+    command: uvicorn src.main:app --host 0.0.0.0 --port 80 --reload
+    volumes:
+      - .:/app
+    ports:
+      - 8000:80
+    depends_on:
+      - postgres
+    networks:
+      network:
+        ipv4_address: 172.25.0.3
+
+  redis:
+    container_name: redis-container
+    image: redis:alpine
+    networks:
+      network:
+        ipv4_address: 172.25.0.9
+
+  postgres:
+    container_name: postgres-container
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      network:
+        ipv4_address: 172.25.0.11
+
+  pgadmin:
+    container_name: pgadmin-container
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@pgadmin.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+      - PGADMIN_LISTEN_PORT=5050
+    ports:
+      - "5050:5050"
+    networks:
+      network:
+        ipv4_address: 172.25.0.6
+
+volumes:
+  pgdata:
+
+networks:
+  network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+          gateway: 172.25.0.1
